@@ -2,7 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { History } from "lucide-react";
 import type { JSX } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/renderer/src/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+} from "@/renderer/src/components/ui/dropdown-menu";
 
 interface SearchHistoryItem {
     location: string;
@@ -24,7 +24,7 @@ interface SearchHistoryProps {
     onSelectHistory: (item: SearchHistoryItem) => void;
 }
 
-export function SearchHistory({ history, onSelectHistory }: SearchHistoryProps): JSX.Element {
+export function SearchHistory({ history, onSelectHistory }: SearchHistoryProps): JSX.Element | null {
     const { isAuthenticated } = useAuth0();
 
     if (!isAuthenticated || history.length === 0) {

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { useAuth0 } from "@auth0/auth0-react";
-import { LogOut, User } from "lucide-react";
+import { UserCircle } from "lucide-react";
 
+import { Button } from "../ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,24 +10,14 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger
-} from "@/renderer/src/components/ui/dropdown-menu";
-
-import { Button } from "../ui/button";
+} from "../ui/dropdown-menu";
 
 export function AuthMenu() {
-    const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
-
-    if (isLoading) {
-        return (
-            <Button variant="ghost" size="sm">
-                Loading...
-            </Button>
-        );
-    }
+    const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
 
     if (!isAuthenticated) {
         return (
-            <Button onClick={() => loginWithRedirect()} size="sm">
+            <Button onClick={() => loginWithRedirect()} variant="outline" className="bg-white/90 backdrop-blur-sm">
                 Sign In
             </Button>
         );
@@ -35,21 +26,19 @@ export function AuthMenu() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    {user?.picture ? (
-                        <img src={user.picture} alt={user.name} className="w-6 h-6 rounded-full" />
-                    ) : (
-                        <User className="w-4 h-4" />
-                    )}
-                    {user?.name}
+                <Button variant="outline" className="bg-white/90 backdrop-blur-sm">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    {user?.name || user?.email}
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="flex items-center gap-2" onClick={() => logout()}>
-                    <LogOut className="w-4 h-4" />
-                    <span>Log out</span>
+                <DropdownMenuItem
+                    onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                    className="text-red-600 cursor-pointer"
+                >
+                    Sign Out
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
