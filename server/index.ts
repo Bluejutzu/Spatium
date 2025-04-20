@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import axios, { AxiosError } from "axios";
@@ -12,9 +14,9 @@ app.get("/geocode", async c => {
     if (!query) {
         return c.json({ error: "Missing query parameter `q`" }, 400);
     }
-
+    const endpoint = "https://nominatim.openstreetmap.org/search";
     try {
-        const geoRes = await axios.get("https://nominatim.openstreetmap.org/search", {
+        const geoRes = await axios.get(process.env.API_CORS_PROXY + encodeURIComponent(endpoint), {
             params: {
                 q: query,
                 format: "json",

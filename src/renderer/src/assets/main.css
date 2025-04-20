@@ -1,175 +1,172 @@
-@import "./base.css";
-
-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background-size: cover;
-    user-select: none;
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-code {
-    font-weight: 600;
-    padding: 3px 5px;
-    border-radius: 2px;
-    background-color: var(--color-background-mute);
-    font-family:
-        ui-monospace,
-        SFMono-Regular,
-        SF Mono,
-        Menlo,
-        Consolas,
-        Liberation Mono,
-        monospace;
-    font-size: 85%;
+body, html {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
 }
 
 #root {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    margin-bottom: 80px;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-container {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.control-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 1000;
+  border-radius: 8px;
+}
+
+.control-panel input {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.control-panel input:focus {
+  border-color: #3f51b5;
+}
+
+.control-panel select {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.control-panel button {
+  padding: 8px 16px;
+  background: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.control-panel button:hover {
+  background: #303f9f;
+}
+
+.control-panel button:active {
+  background: #1a237e;
+}
+
+/* Loading state */
+.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Error state */
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  display: none;
+}
+
+.error-message.visible {
+  display: block;
+}
+
+/* Leaflet map custom styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.leaflet-popup-content {
+  margin: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Map controls */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.leaflet-control-zoom a {
+  background: white !important;
+  color: #3f51b5 !important;
+  border: none !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: #f5f5f5 !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.9) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+}
+
+/* Improve popup styles */
+.leaflet-popup {
+  margin-bottom: 60px;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Make sure Leaflet container takes full height */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .control-panel {
+    flex-direction: column;
+    padding: 12px;
+  }
+
+  .control-panel input,
+  .control-panel select,
+  .control-panel button {
     width: 100%;
-    height: 100%;
-}
-
-.logo {
-    margin-bottom: 20px;
-    -webkit-user-drag: none;
-    height: 128px;
-    width: 128px;
-    will-change: filter;
-    transition: filter 300ms;
-}
-
-.logo:hover {
-    filter: drop-shadow(0 0 1.2em #6988e6aa);
-}
-
-.creator {
-    font-size: 14px;
-    line-height: 16px;
-    color: var(--ev-c-text-2);
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.text {
-    font-size: 28px;
-    color: var(--ev-c-text-1);
-    font-weight: 700;
-    line-height: 32px;
-    text-align: center;
-    margin: 0 10px;
-    padding: 16px 0;
-}
-
-.tip {
-    font-size: 16px;
-    line-height: 24px;
-    color: var(--ev-c-text-2);
-    font-weight: 600;
-}
-
-.react {
-    background: -webkit-linear-gradient(315deg, #087ea4 55%, #7c93ee);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-}
-
-.ts {
-    background: -webkit-linear-gradient(315deg, #3178c6 45%, #f0dc4e);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-}
-
-.actions {
-    display: flex;
-    padding-top: 32px;
-    margin: -6px;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-}
-
-.action {
-    flex-shrink: 0;
-    padding: 6px;
-}
-
-.action a {
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    border: 1px solid transparent;
-    text-align: center;
-    font-weight: 600;
-    white-space: nowrap;
-    border-radius: 20px;
-    padding: 0 20px;
-    line-height: 38px;
-    font-size: 14px;
-    border-color: var(--ev-button-alt-border);
-    color: var(--ev-button-alt-text);
-    background-color: var(--ev-button-alt-bg);
-}
-
-.action a:hover {
-    border-color: var(--ev-button-alt-hover-border);
-    color: var(--ev-button-alt-hover-text);
-    background-color: var(--ev-button-alt-hover-bg);
-}
-
-.versions {
-    position: absolute;
-    bottom: 30px;
-    margin: 0 auto;
-    padding: 15px 0;
-    font-family: "Menlo", "Lucida Console", monospace;
-    display: inline-flex;
-    overflow: hidden;
-    align-items: center;
-    border-radius: 22px;
-    background-color: #202127;
-    backdrop-filter: blur(24px);
-}
-
-.versions li {
-    display: block;
-    float: left;
-    border-right: 1px solid var(--ev-c-gray-1);
-    padding: 0 20px;
-    font-size: 14px;
-    line-height: 14px;
-    opacity: 0.8;
-    &:last-child {
-        border: none;
-    }
-}
-
-@media (max-width: 720px) {
-    .text {
-        font-size: 20px;
-    }
-}
-
-@media (max-width: 620px) {
-    .versions {
-        display: none;
-    }
-}
-
-@media (max-width: 350px) {
-    .tip,
-    .actions {
-        display: none;
-    }
+  }
 }

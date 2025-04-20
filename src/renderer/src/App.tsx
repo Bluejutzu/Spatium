@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
-import { type JSX, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const speeds: Record<string, number> = {
     walking: 1.4,
@@ -10,7 +10,7 @@ const speeds: Record<string, number> = {
     bus: 8
 };
 
-function App(): JSX.Element {
+const App = () => {
     const mapRef = useRef<LeafletMap>(null);
     const circleRef = useRef<Circle>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -18,40 +18,75 @@ function App(): JSX.Element {
     const [location, setLocation] = useState("");
     const [transport, setTransport] = useState("walking");
     const [timeInput, setTimeInput] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
 
     useEffect(() => {
-        if (!mapContainer.current) return;
-        mapRef.current = L.map(mapContainer.current).setView([0, 0], 2);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: "© OpenStreetMap contributors"
-        }).addTo(mapRef.current);
+        if (!mapContainer.current || mapRef.current) return;
+
+        const map = L.map(mapContainer.current, {
+            center: [51.505, -0.09],  // Default center
+            zoom: 13,
+            zoomControl: true,
+            attributionControl: true
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors',
+            tileSize: 256,
+            zoomOffset: 0
+        }).addTo(map);
+
+        mapRef.current = map;
+
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
     }, []);
 
     const drawIsochrone = async (): Promise<void> => {
         if (!location.trim() || !timeInput.trim()) {
-            return alert("Please enter both a location and a time (e.g. “10m”).");
+            setError("Please enter both a location and a time (e.g. “10m”).");
+            return;
         }
 
         const m = timeInput.match(/^(\d+(?:\.\d+)?)([hms])$/i);
-        if (!m) return alert("Invalid time format. Use e.g. 10m, 1.5h, or 30s.");
+        if (!m) {
+            setError("Invalid time format. Use e.g. 10m, 1.5h, or 30s.");
+            return;
+        }
+
+        setError("");
+        setIsLoading(true);
 
         const value = parseFloat(m[1]);
         const unit = m[2].toLowerCase();
         const seconds = unit === "h" ? value * 3600 : unit === "m" ? value * 60 : value;
 
         const speed = speeds[transport];
-        if (!speed) return alert("Unknown transport mode.");
+        if (!speed) {
+            setError("Unknown transport mode.");
+            setIsLoading(false);
+            return;
+        }
 
         const radius = speed * seconds;
 
         try {
-            const res = await axios.get(`http://localhost:4000/geocode`, {
+            const res = await axios.get(`http://localhost:3000/geocode`, {
                 params: {
                     q: location
                 }
             });
 
-            if (!res.data.length) return alert("Location not found.");
+            if (!res.data.length) {
+                setError("Location not found.");
+                return;
+            }
             const { lat, lon, display_name } = res.data[0];
             const latNum = parseFloat(lat);
             const lonNum = parseFloat(lon);
@@ -75,44 +110,48 @@ function App(): JSX.Element {
                 .openOn(mapRef.current!);
         } catch (err) {
             console.error(err);
-            alert("Error fetching location or drawing map.");
+            setError("Error fetching location or drawing map.");
+        } finally {
+            setIsLoading(false);
         }
     };
-    alert("something");
+
     return (
-        <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-            <div
-                style={{
-                    padding: "8px",
-                    background: "#fafafa",
-                    display: "flex",
-                    gap: "8px",
-                    alignItems: "center"
-                }}
-            >
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            {error && <div className={`error-message ${error ? 'visible' : ''}`}>{error}</div>}
+            <div className={`control-panel ${isLoading ? 'loading' : ''}`}>
                 <input
-                    style={{ flex: 2, padding: "4px 8px" }}
                     value={location}
                     onChange={e => setLocation(e.target.value)}
                     placeholder="City, ZIP or “lat,lon”"
+                    disabled={isLoading}
                 />
-                <select style={{ padding: "4px 8px" }} value={transport} onChange={e => setTransport(e.target.value)}>
+                <select
+                    value={transport}
+                    onChange={e => setTransport(e.target.value)}
+                    disabled={isLoading}
+                >
                     <option value="walking">Walking</option>
                     <option value="cycling">Cycling</option>
                     <option value="driving">Driving</option>
                     <option value="bus">Bus</option>
                 </select>
                 <input
-                    style={{ width: "120px", padding: "4px 8px" }}
                     value={timeInput}
                     onChange={e => setTimeInput(e.target.value)}
                     placeholder="e.g. 10m, 1.5h, 30s"
+                    disabled={isLoading}
                 />
-                <button onClick={drawIsochrone}>Go</button>
+                <button
+                    onClick={drawIsochrone}
+                    disabled={isLoading}
+                >
+                    {isLoading ? 'Loading...' : 'Go'}
+                </button>
             </div>
-            <div ref={mapContainer} className="map-container" style={{ flex: 1 }} />
+            <div ref={mapContainer} className="map-container" />
         </div>
     );
-}
+};
 
 export default App;
