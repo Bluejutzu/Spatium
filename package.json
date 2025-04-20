@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "description": "An Electron application with React and TypeScript",
     "main": "./out/main/index.js",
-    "author": "example.com",
     "homepage": "https://electron-vite.org",
     "scripts": {
         "serve": "ts-node server/index.ts",
@@ -14,7 +13,8 @@
         "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
         "typecheck": "npm run typecheck:node && npm run typecheck:web",
         "start": "electron-vite preview",
-        "dev": "electron-vite dev && pnpm serve",
+        "dev": "electron-vite dev",
+        "dev2": "electron-vite dev && pnpm serve",
         "build": "npm run typecheck && electron-vite build",
         "postinstall": "electron-builder install-app-deps",
         "build:unpack": "npm run build && electron-builder --dir",
@@ -23,6 +23,7 @@
         "build:linux": "electron-vite build && electron-builder --linux"
     },
     "dependencies": {
+        "@auth0/auth0-react": "^2.3.0",
         "@electron-toolkit/preload": "^3.0.1",
         "@electron-toolkit/utils": "^4.0.0",
         "axios": "^1.8.4",
@@ -67,6 +68,7 @@
         "tailwind-merge": "^3.2.0",
         "tailwindcss": "^4.1.4",
         "tailwindcss-animate": "^1.0.7",
+        "ts-node": "^10.9.2",
         "typescript": "^5.8.3",
         "vite": "^6.2.6",
         "vue-eslint-parser": "^10.1.3"
