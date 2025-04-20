@@ -1,8 +1,8 @@
-import 'dotenv/config'
+import "dotenv/config";
 
+import axios from "axios";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import axios, { AxiosError } from "axios";
 
 const app = new Hono();
 
@@ -28,8 +28,8 @@ app.get("/geocode", async c => {
         });
 
         return c.json(geoRes.data);
-    } catch (error: AxiosError | any) {
-        console.error(error?.config.data);
+    } catch (error) {
+        console.error(error);
         return c.json({ error: "Failed to fetch geocode data" }, 500);
     }
 });

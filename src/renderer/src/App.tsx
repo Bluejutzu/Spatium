@@ -1,7 +1,15 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import axios from "axios";
 import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
-import { useEffect, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
+
+import { SearchHistoryDropdown } from "./components/SearchHistoryDropdown";
+import { ThemeProvider } from "./components/theme-provider";
+import { Button } from "./components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { ThemeToggle } from "./components/ui/theme-toggle";
+import { useSearchHistory } from "./hooks/useSearchHistory";
 
 const speeds: Record<string, number> = {
     walking: 1.4,
@@ -10,7 +18,7 @@ const speeds: Record<string, number> = {
     bus: 8
 };
 
-const App = () => {
+const App = (): JSX.Element => {
     const mapRef = useRef<LeafletMap>(null);
     const circleRef = useRef<Circle>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -21,19 +29,21 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const { addSearchQuery } = useSearchHistory();
+
     useEffect(() => {
         if (!mapContainer.current || mapRef.current) return;
 
         const map = L.map(mapContainer.current, {
-            center: [51.505, -0.09],  // Default center
+            center: [51.505, -0.09], // Default center
             zoom: 13,
             zoomControl: true,
             attributionControl: true
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
-            attribution: '© OpenStreetMap contributors',
+            attribution: "© OpenStreetMap contributors",
             tileSize: 256,
             zoomOffset: 0
         }).addTo(map);
@@ -116,41 +126,72 @@ const App = () => {
         }
     };
 
+    const handleSearch = async () => {
+        if (location.trim()) {
+            addSearchQuery(location);
+        }
+        await drawIsochrone();
+    };
+
+    const handleHistorySelect = (query: string) => {
+        setLocation(query);
+    };
+
     return (
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            {error && <div className={`error-message ${error ? 'visible' : ''}`}>{error}</div>}
-            <div className={`control-panel ${isLoading ? 'loading' : ''}`}>
-                <input
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="City, ZIP or “lat,lon”"
-                    disabled={isLoading}
-                />
-                <select
-                    value={transport}
-                    onChange={e => setTransport(e.target.value)}
-                    disabled={isLoading}
+        <ThemeProvider>
+            <div className="w-screen h-screen overflow-hidden relative bg-background text-foreground">
+                <ThemeToggle className="absolute top-4 right-4 z-50" />
+
+                {error && (
+                    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm">
+                        {error}
+                    </div>
+                )}
+
+                <div
+                    className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-2xl shadow-lg backdrop-blur-md bg-background/90 flex flex-col gap-4 min-w-[320px] ${isLoading ? "opacity-50" : ""}`}
                 >
-                    <option value="walking">Walking</option>
-                    <option value="cycling">Cycling</option>
-                    <option value="driving">Driving</option>
-                    <option value="bus">Bus</option>
-                </select>
-                <input
-                    value={timeInput}
-                    onChange={e => setTimeInput(e.target.value)}
-                    placeholder="e.g. 10m, 1.5h, 30s"
-                    disabled={isLoading}
-                />
-                <button
-                    onClick={drawIsochrone}
-                    disabled={isLoading}
-                >
-                    {isLoading ? 'Loading...' : 'Go'}
-                </button>
+                    <div className="flex flex-col gap-2">
+                        <input
+                            className="w-full px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                            value={location}
+                            onChange={e => setLocation(e.target.value)}
+                            placeholder="City, ZIP or “lat,lon”"
+                            disabled={isLoading}
+                        />
+                        <SearchHistoryDropdown onSelect={handleHistorySelect} />
+                    </div>
+
+                    <div className="flex gap-2">
+                        <Select value={transport} onValueChange={setTransport}>
+                            <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Transport" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="walking">Walking</SelectItem>
+                                <SelectItem value="cycling">Cycling</SelectItem>
+                                <SelectItem value="driving">Driving</SelectItem>
+                                <SelectItem value="bus">Bus</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <input
+                            className="flex-1 px-3 py-2 rounded-lg border border-input bg-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+                            value={timeInput}
+                            onChange={e => setTimeInput(e.target.value)}
+                            placeholder="e.g. 10m, 1.5h, 30s"
+                            disabled={isLoading}
+                        />
+
+                        <Button onClick={handleSearch} disabled={isLoading} className="w-20">
+                            {isLoading ? "..." : "Go"}
+                        </Button>
+                    </div>
+                </div>
+
+                <div ref={mapContainer} className="w-full h-full" />
             </div>
-            <div ref={mapContainer} className="map-container" />
-        </div>
+        </ThemeProvider>
     );
 };
 
