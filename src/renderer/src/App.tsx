@@ -1,12 +1,10 @@
-import "dotenv/config";
-
 import axios from "axios";
 import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
 import { type JSX, useEffect, useRef, useState } from "react";
 
 const speeds: Record<string, number> = {
-    walking: 1.4, // m/s
+    walking: 1.4,
     cycling: 5.5,
     driving: 13.9,
     bus: 8
@@ -21,7 +19,6 @@ function App(): JSX.Element {
     const [transport, setTransport] = useState("walking");
     const [timeInput, setTimeInput] = useState("");
 
-    // Initialize map once
     useEffect(() => {
         if (!mapContainer.current) return;
         mapRef.current = L.map(mapContainer.current).setView([0, 0], 2);
@@ -35,7 +32,6 @@ function App(): JSX.Element {
             return alert("Please enter both a location and a time (e.g. “10m”).");
         }
 
-        // Parse time (e.g. “1.5h”, “30m”, “45s”)
         const m = timeInput.match(/^(\d+(?:\.\d+)?)([hms])$/i);
         if (!m) return alert("Invalid time format. Use e.g. 10m, 1.5h, or 30s.");
 
@@ -47,11 +43,12 @@ function App(): JSX.Element {
         if (!speed) return alert("Unknown transport mode.");
 
         const radius = speed * seconds;
-        const endpoint = "https://nominatim.openstreetmap.org/search";
 
         try {
-            const res = await axios.get(`${process.env.API_CORS_PROXY}${encodeURIComponent(endpoint)}`, {
-                params: { q: location, format: "json", limit: 1 }
+            const res = await axios.get(`http://localhost:4000/geocode`, {
+                params: {
+                    q: location
+                }
             });
 
             if (!res.data.length) return alert("Location not found.");
@@ -81,7 +78,7 @@ function App(): JSX.Element {
             alert("Error fetching location or drawing map.");
         }
     };
-
+    alert("something");
     return (
         <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
             <div
