@@ -1,8 +1,8 @@
-import 'dotenv/config'
+import "dotenv/config";
 
+import axios from "axios";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import axios, { AxiosError } from "axios";
 
 const app = new Hono();
 
@@ -14,22 +14,24 @@ app.get("/geocode", async c => {
     if (!query) {
         return c.json({ error: "Missing query parameter `q`" }, 400);
     }
-    const endpoint = "https://nominatim.openstreetmap.org/search";
     try {
-        const geoRes = await axios.get(process.env.API_CORS_PROXY + encodeURIComponent(endpoint), {
-            params: {
-                q: query,
-                format: "json",
-                limit: 1
-            },
-            headers: {
-                "User-Agent": "SpatiumApp/1.0 (kalebdaniel98@gmail.com)"
+        const geoRes = await axios.get(
+            "https://corsproxy.io/?https://nominatim.openstreetmap.org/search?q=90420&format=jsonv2&limit=1&key=405e56db",
+            {
+                params: {
+                    q: query,
+                    format: "jsonv2",
+                    limit: 1
+                },
+                headers: {
+                    "User-Agent": "SpatiumApp/1.0 (kalebdaniel98@gmail.com)"
+                }
             }
-        });
-
+        );
+        console.log(geoRes.data);
         return c.json(geoRes.data);
-    } catch (error: AxiosError | any) {
-        console.error(error?.config.data);
+    } catch (error) {
+        console.error(error);
         return c.json({ error: "Failed to fetch geocode data" }, 500);
     }
 });
