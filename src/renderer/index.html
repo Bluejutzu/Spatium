@@ -2,14 +2,18 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>Electron</title>
-        <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+        <title>Travel App</title>
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'self' http://localhost:3000; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.tile.openstreetmap.org; connect-src 'self' http://localhost:3000 https://*.tile.openstreetmap.org"
+            content="default-src 'self' http://localhost:3000 https://*.auth0.com; script-src 'self' https://*.auth0.com; style-src 'self' 'unsafe-inline' https://unpkg.com https://*.auth0.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com https://*.auth0.com; connect-src 'self' http://localhost:3000 https://*.tile.openstreetmap.org https://unpkg.com https://*.auth0.com"
+        />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""
         />
     </head>
-
     <body>
         <div id="root"></div>
         <script type="module" src="./src/main.tsx"></script>

@@ -2,14 +2,7 @@
 import axios from "axios";
 import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
-import { type JSX, useEffect, useRef, useState } from "react";
-
-import { SearchHistoryDropdown } from "./components/SearchHistoryDropdown";
-import { ThemeProvider } from "./components/theme-provider";
-import { Button } from "./components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
-import { ThemeToggle } from "./components/ui/theme-toggle";
-import { useSearchHistory } from "./hooks/useSearchHistory";
+import { useEffect, useRef, useState } from "react";
 
 const speeds: Record<string, number> = {
     walking: 1.4,
@@ -18,7 +11,7 @@ const speeds: Record<string, number> = {
     bus: 8
 };
 
-const App = (): JSX.Element => {
+const App = () => {
     const mapRef = useRef<LeafletMap>(null);
     const circleRef = useRef<Circle>(null);
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -29,12 +22,11 @@ const App = (): JSX.Element => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const { addSearchQuery } = useSearchHistory();
-
     useEffect(() => {
         if (!mapContainer.current || mapRef.current) return;
 
         const map = L.map(mapContainer.current, {
+            center: [51.505, -0.09], // Default center
             center: [51.505, -0.09], // Default center
             zoom: 13,
             zoomControl: true,
@@ -42,7 +34,9 @@ const App = (): JSX.Element => {
         });
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
+            attribution: "© OpenStreetMap contributors",
             attribution: "© OpenStreetMap contributors",
             tileSize: 256,
             zoomOffset: 0
@@ -57,6 +51,37 @@ const App = (): JSX.Element => {
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            const savedHistory = localStorage.getItem("searchHistory");
+            if (savedHistory) {
+                setSearchHistory(JSON.parse(savedHistory));
+            }
+        }
+    }, [isAuthenticated]);
+
+    const addToHistory = (): void => {
+        if (!isAuthenticated) return;
+
+        const newHistoryItem: SearchHistoryItem = {
+            location,
+            transport,
+            time: timeInput,
+            timestamp: new Date().toLocaleString()
+        };
+
+        const updatedHistory = [newHistoryItem, ...searchHistory].slice(0, 10); // Keep last 10 searches
+        setSearchHistory(updatedHistory);
+        localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
+    };
+
+    const handleHistorySelect = (item: SearchHistoryItem): void => {
+        setLocation(item.location);
+        setTransport(item.transport);
+        setTimeInput(item.time);
+        drawIsochrone();
+    };
 
     const drawIsochrone = async (): Promise<void> => {
         if (!location.trim() || !timeInput.trim()) {
@@ -118,6 +143,8 @@ const App = (): JSX.Element => {
                 .setLatLng([latNum, lonNum])
                 .setContent(`<strong>${display_name}</strong><br>` + `~ ${(radius / 1000).toFixed(2)}km radius`)
                 .openOn(mapRef.current!);
+
+            addToHistory();
         } catch (err) {
             console.error(err);
             setError("Error fetching location or drawing map.");
@@ -191,7 +218,8 @@ const App = (): JSX.Element => {
 
                 <div ref={mapContainer} className="w-full h-full" />
             </div>
-        </ThemeProvider>
+            <div ref={mapContainer} className="map-container" />
+        </div>
     );
 };
 
