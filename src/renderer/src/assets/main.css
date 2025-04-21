@@ -518,3 +518,13 @@ body {
     gap: 0.5rem;
     color: #9ca3af;
 }
+
+.credits-tech-list a {
+    color: #9ca3af;
+    text-decoration: underline;
+    transition: text-decoration 0.2s ease;
+}
+
+.credits-tech-list a:hover {
+    text-decoration: underline;
+}

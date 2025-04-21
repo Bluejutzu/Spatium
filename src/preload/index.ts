@@ -1,8 +1,10 @@
 import { electronAPI } from "@electron-toolkit/preload";
-import { contextBridge } from "electron";
+import { contextBridge, shell } from "electron";
 
 // Custom APIs for renderer
-const api = {};
+const api = {
+    openExternal: (url: string) => shell.openExternal(url)
+};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
