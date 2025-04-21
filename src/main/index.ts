@@ -1,8 +1,9 @@
 import { electronApp, is, optimizer } from "@electron-toolkit/utils";
-import { app, BrowserWindow, ipcMain, shell } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 
 import icon from "../../resources/icon.png?asset";
+import { makeLinksOpenExternally } from "./utils/externalLinks";
 
 function createWindow(): void {
     // Create the browser window.
@@ -22,10 +23,8 @@ function createWindow(): void {
         mainWindow.show();
     });
 
-    mainWindow.webContents.setWindowOpenHandler(details => {
-        shell.openExternal(details.url);
-        return { action: "deny" };
-    });
+    // Set up external link handling
+    makeLinksOpenExternally(mainWindow);
 
     // HMR for renderer base on electron-vite cli.
     // Load the remote URL for development or the local html file for production.

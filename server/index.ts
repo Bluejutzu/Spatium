@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 
 const app = new Hono();
+const NOMINATIM_API_KEY = process.env.NOMINATIM_API_KEY || "";
 
 app.use("*", cors());
 
@@ -15,15 +16,16 @@ app.get("/geocode", async c => {
 
     try {
         const geoRes = await axios.get(
-            "https://corsproxy.io/?https://nominatim.openstreetmap.org/search?q=90420&format=jsonv2&limit=1&key=405e56db",
+            "https://nominatim.openstreetmap.org/search",
             {
                 params: {
                     q: query,
                     format: "json",
-                    limit: 1
+                    limit: 1,
+                    key: NOMINATIM_API_KEY
                 },
                 headers: {
-                    "User-Agent": "SpatiumApp/1.0 (kalebdaniel98@gmail.com)"
+                    "User-Agent": "TravelApp/1.0 (support@bmc-company.com)"
                 }
             }
         );
