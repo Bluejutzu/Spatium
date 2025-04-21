@@ -6,7 +6,8 @@ import eslintPluginVue from "eslint-plugin-vue";
 import vueParser from "vue-eslint-parser";
 
 export default tseslint.config(
-    { ignores: ["**/node_modules", "**/dist", "**/out", "**/ui"] },
+    { ignores: ["**/node_modules", "**/dist", "**/out", "**/ui", "**/.wrangler"] },
+    { files: ["src/**/*.{ts,tsx,vue}"] },
     tseslint.configs.recommended,
     eslintPluginVue.configs["flat/recommended"],
     {
