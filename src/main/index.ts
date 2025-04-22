@@ -2,7 +2,7 @@ import { electronApp, is, optimizer } from "@electron-toolkit/utils";
 import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 
-import icon from "../../resources/icon.png?asset";
+import icon from "../../resources/Spatium_Icon.png?asset";
 import { makeLinksOpenExternally } from "./utils/externalLinks";
 
 function createWindow(): void {

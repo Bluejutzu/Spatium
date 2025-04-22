@@ -4,7 +4,11 @@ import L from "leaflet";
 import { type JSX, useEffect, useRef, useState } from "react";
 
 import { CreditsModal } from "./components/CreditsModal";
+import { HelpModal } from "./components/HelpModal";
 import { HistoryModal } from "./components/HistoryModal";
+import { PlaceDetails } from "./components/PlaceDetails";
+import { Toast } from "./components/Toast";
+import { Button } from "./components/ui/Button";
 import { getHistory, type HistoryItem, saveToHistory } from "./lib/utils";
 
 const speeds: Record<string, number> = {
@@ -24,7 +28,22 @@ function App(): JSX.Element {
     const [timeInput, setTimeInput] = useState("");
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isCreditsOpen, setIsCreditsOpen] = useState(false);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
     const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [selectedPlace, setSelectedPlace] = useState<{
+        name: string;
+        displayName: string;
+        lat: number;
+        lon: number;
+        radius?: number;
+        transport?: string;
+        time?: string;
+    } | null>(null);
+    const [toast, setToast] = useState<{
+        message: string;
+        title?: string;
+        action?: { label: string; onClick: () => void };
+    } | null>(null);
 
     useEffect(() => {
         if (!mapContainer.current || mapRef.current) return;
@@ -48,7 +67,6 @@ function App(): JSX.Element {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapRef.current);
 
-        // Load initial history
         setHistory(getHistory());
 
         return () => {
@@ -57,37 +75,53 @@ function App(): JSX.Element {
         };
     }, []);
 
-    const handleHistorySelect = (item: HistoryItem): void => {
-        // Skip setting input values and directly draw with the history item values
-        setIsHistoryOpen(false);
+    const showToast = (message: string, title?: string, action?: { label: string; onClick: () => void }): void => {
+        setToast({ message, title, action });
+    };
 
-        // Reuse drawIsochrone logic but with direct values
+    const handleHistorySelect = (item: HistoryItem): void => {
+        setIsHistoryOpen(false);
         drawIsochroneWithValues(item.location, item.transport, item.time);
+    };
+
+    const handleExampleSelect = (example: { location: string; transport: string; time: string }): void => {
+        setLocation(example.location);
+        setTransport(example.transport);
+        setTimeInput(example.time);
     };
 
     const drawIsochroneWithValues = async (loc: string, mode: string, time: string): Promise<void> => {
         if (!loc.trim() || !time.trim()) {
-            return alert("Invalid history item.");
+            return showToast("Please provide both location and time values.", "Invalid Input");
         }
 
         const m = time.match(/^(\d+(?:\.\d+)?)([hms])$/i);
-        if (!m) return alert("Invalid time format in history item.");
+        if (!m) return showToast("Time should be in format: 10m, 1.5h, or 30s", "Invalid Time Format");
 
         const value = parseFloat(m[1]);
         const unit = m[2].toLowerCase();
         const seconds = unit === "h" ? value * 3600 : unit === "m" ? value * 60 : value;
 
         const speed = speeds[mode];
-        if (!speed) return alert("Unknown transport mode in history item.");
+        if (!speed) return showToast("Selected transport mode is not supported.", "Invalid Transport");
 
         const radius = speed * seconds;
 
         try {
-            const res = await axios.get(`http://127.0.0.1:8787/geocode`, {
+            const res = await axios.get(`http://127.0.0.1:3000/geocode`, {
                 params: { q: loc }
             });
 
-            if (!res.data.length) return alert("Location not found.");
+            if (!res.data.length)
+                return showToast(
+                    "Could not find the specified location. Try a different search term.",
+                    "Location Not Found",
+                    {
+                        label: "Clear Input",
+                        onClick: () => setLocation("")
+                    }
+                );
+
             const { lat, lon, display_name } = res.data[0];
             const latNum = parseFloat(lat);
             const lonNum = parseFloat(lon);
@@ -103,26 +137,49 @@ function App(): JSX.Element {
                 color: "#3b82f6",
                 fillColor: "#3b82f6",
                 fillOpacity: 0.2
-            }).addTo(mapRef.current!);
+            })
+                .addTo(mapRef.current!)
+                .on("click", () => {
+                    setSelectedPlace({
+                        name: loc,
+                        displayName: display_name,
+                        lat: latNum,
+                        lon: lonNum,
+                        radius,
+                        transport: mode,
+                        time
+                    });
+                });
 
-            L.popup()
-                .setLatLng([latNum, lonNum])
-                .setContent(
-                    `<div class="popup-content">
-                        <strong>${display_name}</strong><br>
-                        ~ ${(radius / 1000).toFixed(2)}km radius
-                    </div>`
-                )
-                .openOn(mapRef.current!);
+            // Show the place details panel
+            setSelectedPlace({
+                name: loc,
+                displayName: display_name,
+                lat: latNum,
+                lon: lonNum,
+                radius,
+                transport: mode,
+                time
+            });
         } catch (err) {
             console.error(err);
-            alert("Error fetching location or drawing map.");
+            showToast("Could not fetch location data. Please try again.", "Network Error", {
+                label: "Retry",
+                onClick: () => drawIsochroneWithValues(loc, mode, time)
+            });
         }
     };
 
     const drawIsochrone = async (): Promise<void> => {
         if (!location.trim() || !timeInput.trim()) {
-            return alert("Please enter both a location and a time (e.g. “10m”).");
+            return showToast("Please enter both a location and a time value.", "Missing Input", {
+                label: "See Examples",
+                onClick: () =>
+                    showToast(
+                        "Try formats like: '10m' for 10 minutes, '1.5h' for 1.5 hours, or '30s' for 30 seconds",
+                        "Input Examples"
+                    )
+            });
         }
 
         // Save to history before drawing
@@ -164,23 +221,43 @@ function App(): JSX.Element {
                     onChange={e => setTimeInput(e.target.value)}
                     placeholder="e.g. 10m, 1.5h"
                 />
-                <button onClick={drawIsochrone} className="go-button text-sm font-medium">
+                <Button onClick={drawIsochrone} size="default">
                     Go
-                </button>
-                <button onClick={handleClear} className="clear-button text-sm font-medium">
+                </Button>
+                <Button onClick={handleClear} variant="destructive" size="default">
                     Clear
-                </button>
-                <button onClick={() => setIsHistoryOpen(true)} className="history-button text-sm font-medium">
+                </Button>
+                <Button onClick={() => setIsHistoryOpen(true)} variant="outline" size="default">
                     History
-                </button>
-                <button onClick={() => setIsCreditsOpen(true)} className="github-button" title="View Credits">
+                </Button>
+                <Button
+                    onClick={() => setIsCreditsOpen(true)}
+                    variant="ghost"
+                    size="icon"
+                    className="github-button"
+                    title="View Credits"
+                >
                     <svg viewBox="0 0 16 16" fill="currentColor">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
                     </svg>
-                </button>
+                </Button>
+                <Button
+                    onClick={() => setIsHelpOpen(true)}
+                    variant="ghost"
+                    size="icon"
+                    className="help-button"
+                    title="Help & Examples"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                </Button>
             </div>
             <div className="map-wrapper">
                 <div ref={mapContainer} className="map" />
+                <PlaceDetails place={selectedPlace} onClose={() => setSelectedPlace(null)} />
             </div>
             <HistoryModal
                 isOpen={isHistoryOpen}
@@ -190,6 +267,15 @@ function App(): JSX.Element {
                 onHistoryChange={() => setHistory(getHistory())}
             />
             <CreditsModal isOpen={isCreditsOpen} onClose={() => setIsCreditsOpen(false)} />
+            <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} onExampleSelect={handleExampleSelect} />
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    title={toast.title}
+                    action={toast.action}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 }
