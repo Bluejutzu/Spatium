@@ -1,4 +1,8 @@
-import { type JSX } from "react";
+import "../styles/components/CreditsModal.css";
+
+import { type JSX, type MouseEvent } from "react";
+
+import { Button } from "./ui/Button";
 
 interface CreditsModalProps {
     isOpen: boolean;
@@ -8,7 +12,7 @@ interface CreditsModalProps {
 export function CreditsModal({ isOpen, onClose }: CreditsModalProps): JSX.Element {
     if (!isOpen) return <></>;
 
-    const handleExternalLink = (e: React.MouseEvent<HTMLAnchorElement>): void => {
+    const handleExternalLink = (e: MouseEvent<HTMLAnchorElement>): void => {
         e.preventDefault();
         const href = e.currentTarget.href;
         window.api.openExternal(href);
@@ -20,9 +24,9 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps): JSX.Elemen
             <div className="modal-container">
                 <div className="modal-header">
                     <h2 className="heading-lg">Credits & Source Code</h2>
-                    <button onClick={onClose} className="modal-close">
+                    <Button onClick={onClose} variant="ghost" size="icon" className="modal-close">
                         ✕
-                    </button>
+                    </Button>
                 </div>
                 <div className="modal-content">
                     <div className="credits-list">

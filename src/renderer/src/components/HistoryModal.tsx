@@ -1,6 +1,10 @@
+import "../styles/components/HistoryModal.css";
+
 import { type JSX, useState } from "react";
 
 import { clearHistory, deleteHistoryItem, type HistoryItem } from "../lib/utils";
+import { Toast } from "./Toast";
+import { Button } from "./ui/Button";
 
 interface HistoryModalProps {
     isOpen: boolean;
@@ -18,6 +22,10 @@ export function HistoryModal({
     onHistoryChange
 }: HistoryModalProps): JSX.Element {
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [toast, setToast] = useState<{
+        message: string;
+        title?: string;
+    } | null>(null);
 
     if (!isOpen) return <></>;
 
@@ -25,11 +33,19 @@ export function HistoryModal({
         clearHistory();
         onHistoryChange();
         setShowConfirmation(false);
+        setToast({
+            title: "Success",
+            message: "All history items have been deleted"
+        });
     };
 
     const handleDelete = (timestamp: number): void => {
         deleteHistoryItem(timestamp);
         onHistoryChange();
+        setToast({
+            title: "Success",
+            message: "History item deleted successfully"
+        });
     };
 
     return (
@@ -40,12 +56,12 @@ export function HistoryModal({
                     <div className="confirmation-dialog">
                         <p className="text-sm">Are you sure you want to delete all history items?</p>
                         <div className="confirmation-buttons">
-                            <button onClick={handleDeleteAll} className="confirm-button">
+                            <Button onClick={handleDeleteAll} variant="destructive" size="sm">
                                 Delete All
-                            </button>
-                            <button onClick={() => setShowConfirmation(false)} className="cancel-button">
+                            </Button>
+                            <Button onClick={() => setShowConfirmation(false)} variant="outline" size="sm">
                                 Cancel
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 )}
@@ -53,13 +69,13 @@ export function HistoryModal({
                     <h2 className="heading-2xl font-semibold">Search History</h2>
                     <div>
                         {history.length > 0 && (
-                            <button onClick={() => setShowConfirmation(true)} className="delete-all-button">
+                            <Button onClick={() => setShowConfirmation(true)} variant="destructive" size="sm">
                                 Delete All
-                            </button>
+                            </Button>
                         )}
-                        <button onClick={onClose} className="modal-close">
+                        <Button onClick={onClose} variant="ghost" size="icon" className="modal-close">
                             ✕
-                        </button>
+                        </Button>
                     </div>
                 </div>
                 <div className="modal-content">
@@ -74,17 +90,20 @@ export function HistoryModal({
                                         {item.transport}, {item.time}
                                     </div>
                                 </div>
-                                <button
+                                <Button
                                     onClick={() => handleDelete(item.timestamp)}
+                                    variant="ghost"
+                                    size="icon"
                                     className="delete-button"
                                     title="Delete"
                                 >
                                     ✕
-                                </button>
+                                </Button>
                             </div>
                         ))
                     )}
                 </div>
+                {toast && <Toast message={toast.message} title={toast.title} onClose={() => setToast(null)} />}
             </div>
         </div>
     );

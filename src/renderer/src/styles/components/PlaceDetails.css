@@ -1,0 +1,87 @@
+.place-details {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 360px;
+    height: 100%;
+    background: #1a1a1a;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+}
+
+.place-details-header {
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.place-details-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #f3f4f6;
+    margin: 0;
+}
+
+.place-details-content {
+    padding: 1rem;
+}
+
+.place-details-address {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.place-details-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.stat {
+    background: rgba(31, 41, 55, 0.5);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #374151;
+}
+
+.stat-label {
+    display: block;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    color: #f3f4f6;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.place-details-coordinates {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(31, 41, 55, 0.3);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.coordinate-label {
+    color: #6b7280;
+    margin-right: 0.5rem;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
