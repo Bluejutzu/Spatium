@@ -51,9 +51,9 @@ interface Props {
 }
 
 export const HelpButton: FC<{ onClick: () => void }> = ({ onClick }) => (
-    <button className="help-button" onClick={onClick} title="Help">
+    <Button onClick={onClick} variant="ghost" size="icon" className="help-button" title="Help">
         <QuestionMarkCircle />
-    </button>
+    </Button>
 );
 
 export const HelpModal: FC<Props> = ({ isOpen, onClose, onExampleSelect }) => {
@@ -61,12 +61,13 @@ export const HelpModal: FC<Props> = ({ isOpen, onClose, onExampleSelect }) => {
 
     return (
         <div className="modal-overlay">
-            <div className="modal">
+            <div className="modal-backdrop" onClick={onClose} />
+            <div className="modal-container">
                 <div className="modal-header">
                     <h2 className="modal-title">How to Use</h2>
-                    <button onClick={onClose} className="modal-close">
-                        ×
-                    </button>
+                    <Button onClick={onClose} variant="ghost" size="icon" className="modal-close">
+                        ✕
+                    </Button>
                 </div>
                 <div className="modal-content">
                     <p className="help-description">
@@ -87,6 +88,8 @@ export const HelpModal: FC<Props> = ({ isOpen, onClose, onExampleSelect }) => {
                                             onExampleSelect(example);
                                             onClose();
                                         }}
+                                        variant="default"
+                                        size="sm"
                                     >
                                         Use this example
                                     </Button>

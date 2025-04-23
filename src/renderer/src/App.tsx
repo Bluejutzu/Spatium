@@ -1,3 +1,5 @@
+import "animate.css";
+
 import axios from "axios";
 import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
@@ -44,6 +46,7 @@ function App(): JSX.Element {
         title?: string;
         action?: { label: string; onClick: () => void };
     } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!mapContainer.current || mapRef.current) return;
@@ -95,6 +98,7 @@ function App(): JSX.Element {
             return showToast("Please provide both location and time values.", "Invalid Input");
         }
 
+        setIsLoading(true);
         const m = time.match(/^(\d+(?:\.\d+)?)([hms])$/i);
         if (!m) return showToast("Time should be in format: 10m, 1.5h, or 30s", "Invalid Time Format");
 
@@ -112,15 +116,12 @@ function App(): JSX.Element {
                 params: { q: loc }
             });
 
-            if (!res.data.length)
-                return showToast(
-                    "Could not find the specified location. Try a different search term.",
-                    "Location Not Found",
-                    {
-                        label: "Clear Input",
-                        onClick: () => setLocation("")
-                    }
-                );
+            if (!res.data.length) {
+                setIsLoading(false);
+                showToast("Could not find the specified location. Try a different search term.", "Location Not Found");
+                setLocation("");
+                return;
+            }
 
             const { lat, lon, display_name } = res.data[0];
             const latNum = parseFloat(lat);
@@ -136,7 +137,8 @@ function App(): JSX.Element {
                 radius,
                 color: "#3b82f6",
                 fillColor: "#3b82f6",
-                fillOpacity: 0.2
+                fillOpacity: 0.2,
+                className: "animated-circle"
             })
                 .addTo(mapRef.current!)
                 .on("click", () => {
@@ -167,27 +169,35 @@ function App(): JSX.Element {
                 label: "Retry",
                 onClick: () => drawIsochroneWithValues(loc, mode, time)
             });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const drawIsochrone = async (): Promise<void> => {
-        if (!location.trim() || !timeInput.trim()) {
-            return showToast("Please enter both a location and a time value.", "Missing Input", {
-                label: "See Examples",
-                onClick: () =>
-                    showToast(
-                        "Try formats like: '10m' for 10 minutes, '1.5h' for 1.5 hours, or '30s' for 30 seconds",
-                        "Input Examples"
-                    )
-            });
+        const button = document.querySelector(".btn-default") as HTMLElement;
+        if (button) button.classList.add("clicked");
+
+        try {
+            if (!location.trim() || !timeInput.trim()) {
+                showToast("Try formats like: '10m' for 10 minutes, '1.5h' for 1.5 hours", "Input Examples");
+                return;
+            }
+
+            // Save to history before drawing
+            saveToHistory({ location, transport, time: timeInput });
+            setHistory(getHistory());
+
+            // Use the shared drawing logic
+            await drawIsochroneWithValues(location, transport, timeInput);
+        } finally {
+            // Ensure the clicked class is always removed
+            if (button) {
+                setTimeout(() => {
+                    button.classList.remove("clicked");
+                }, 600);
+            }
         }
-
-        // Save to history before drawing
-        saveToHistory({ location, transport, time: timeInput });
-        setHistory(getHistory());
-
-        // Use the shared drawing logic
-        await drawIsochroneWithValues(location, transport, timeInput);
     };
 
     const handleClear = (): void => {
@@ -198,17 +208,21 @@ function App(): JSX.Element {
 
     return (
         <div className="app-container">
-            <div className="header">
-                <input
-                    className="search-input text-sm"
-                    value={location}
-                    onChange={e => setLocation(e.target.value)}
-                    placeholder="City, ZIP or “lat,lon”"
-                />
+            <div className="header animate__animated animate__fadeIn">
+                <div className="search-container">
+                    <input
+                        className={`search-input text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
+                        value={location}
+                        onChange={e => setLocation(e.target.value)}
+                        placeholder="City, ZIP or “lat,lon”"
+                        disabled={isLoading}
+                    />
+                </div>
                 <select
-                    className="transport-select text-sm"
+                    className={`transport-select text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
                     value={transport}
                     onChange={e => setTransport(e.target.value)}
+                    disabled={isLoading}
                 >
                     <option value="walking">Walking</option>
                     <option value="cycling">Cycling</option>
@@ -216,46 +230,69 @@ function App(): JSX.Element {
                     <option value="bus">Bus</option>
                 </select>
                 <input
-                    className="time-input text-sm"
+                    className={`time-input text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
                     value={timeInput}
                     onChange={e => setTimeInput(e.target.value)}
                     placeholder="e.g. 10m, 1.5h"
+                    disabled={isLoading}
                 />
-                <Button onClick={drawIsochrone} size="default">
-                    Go
-                </Button>
-                <Button onClick={handleClear} variant="destructive" size="default">
-                    Clear
-                </Button>
-                <Button onClick={() => setIsHistoryOpen(true)} variant="outline" size="default">
-                    History
-                </Button>
-                <Button
-                    onClick={() => setIsCreditsOpen(true)}
-                    variant="ghost"
-                    size="icon"
-                    className="github-button"
-                    title="View Credits"
-                >
-                    <svg viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-                    </svg>
-                </Button>
-                <Button
-                    onClick={() => setIsHelpOpen(true)}
-                    variant="ghost"
-                    size="icon"
-                    className="help-button"
-                    title="Help & Examples"
-                >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                        <path d="M12 17h.01" />
-                    </svg>
-                </Button>
+                <div className="action-buttons">
+                    <Button
+                        onClick={drawIsochrone}
+                        size="default"
+                        disabled={isLoading}
+                        className={`animate__animated ${isLoading ? "loading animate__pulse animate__infinite" : "animate__fadeIn"}`}
+                    >
+                        {isLoading ? "Loading..." : "Go"}
+                    </Button>
+                    <Button
+                        onClick={handleClear}
+                        variant="destructive"
+                        size="default"
+                        disabled={isLoading}
+                        className="animate__animated animate__fadeIn"
+                    >
+                        Clear
+                    </Button>
+                    <Button
+                        onClick={() => setIsHistoryOpen(true)}
+                        variant="outline"
+                        size="default"
+                        disabled={isLoading}
+                    >
+                        History
+                    </Button>
+                    <Button
+                        onClick={() => setIsCreditsOpen(true)}
+                        variant="ghost"
+                        size="icon"
+                        className="github-button"
+                        title="View Credits"
+                        disabled={isLoading}
+                    >
+                        <svg viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12" />
+                        </svg>
+                    </Button>
+                    <Button
+                        onClick={() => setIsHelpOpen(true)}
+                        variant="ghost"
+                        size="icon"
+                        className="help-button"
+                        title="Help & Examples"
+                        disabled={isLoading}
+                    >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                            <path d="M12 17h.01" />
+                        </svg>
+                    </Button>
+                </div>
             </div>
-            <div className="map-wrapper">
+            <div
+                className={`map-wrapper ${isLoading ? "loading animate__animated animate__fadeOut animate__faster" : "animate__animated animate__fadeIn"}`}
+            >
                 <div ref={mapContainer} className="map" />
                 <PlaceDetails place={selectedPlace} onClose={() => setSelectedPlace(null)} />
             </div>
@@ -265,16 +302,14 @@ function App(): JSX.Element {
                 history={history}
                 onItemSelect={handleHistorySelect}
                 onHistoryChange={() => setHistory(getHistory())}
+                showToast={showToast}
             />
             <CreditsModal isOpen={isCreditsOpen} onClose={() => setIsCreditsOpen(false)} />
             <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} onExampleSelect={handleExampleSelect} />
             {toast && (
-                <Toast
-                    message={toast.message}
-                    title={toast.title}
-                    action={toast.action}
-                    onClose={() => setToast(null)}
-                />
+                <div className="toast-overlay">
+                    <Toast message={toast.message} title={toast.title} onClose={() => setToast(null)} />
+                </div>
             )}
         </div>
     );
