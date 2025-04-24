@@ -15,15 +15,15 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+              uses: actions/checkout@v4
 
             - name: Setup Node.js
-              uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 # v4.0.2
+              uses: actions/setup-node@v4
               with:
                   node-version: "20.x"
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@v2.4.0
+              uses: pnpm/action-setup@v2
               with:
                   version: latest
                   run_install: false
@@ -34,7 +34,7 @@ jobs:
                   echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
             - name: Setup pnpm cache
-              uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+              uses: actions/cache@v4
               with:
                   path: ${{ env.STORE_PATH }}
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -59,7 +59,7 @@ jobs:
 
             # Upload artifacts as workflow artifacts
             - name: Upload build artifacts
-              uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.1.0
+              uses: actions/upload-artifact@v4
               with:
                   name: ${{ matrix.os }}-build
                   path: |
