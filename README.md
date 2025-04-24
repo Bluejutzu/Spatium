@@ -1,4 +1,4 @@
-# travel-app
+# Spatium
 
 An Electron application with React and TypeScript
 

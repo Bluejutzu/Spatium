@@ -31,7 +31,7 @@ export function CreditsModal({ isOpen, onClose }: CreditsModalProps): JSX.Elemen
                 <div className="modal-content">
                     <div className="credits-list">
                         <a
-                            href="https://github.com/bluejutzu/travel-app"
+                            href="https://github.com/bluejutzu/Spatium"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="credits-link"
