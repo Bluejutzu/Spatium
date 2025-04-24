@@ -46,7 +46,7 @@ function App(): JSX.Element {
         title?: string;
         action?: { label: string; onClick: () => void };
     } | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading2, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (!mapContainer.current || mapRef.current) return;
@@ -211,18 +211,18 @@ function App(): JSX.Element {
             <div className="header animate__animated animate__fadeIn">
                 <div className="search-container">
                     <input
-                        className={`search-input text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
+                        className={`search-input text-sm ${isLoading2 ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
                         value={location}
                         onChange={e => setLocation(e.target.value)}
                         placeholder="City, ZIP or “lat,lon”"
-                        disabled={isLoading}
+                        disabled={isLoading2}
                     />
                 </div>
                 <select
-                    className={`transport-select text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
+                    className={`transport-select text-sm ${isLoading2 ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
                     value={transport}
                     onChange={e => setTransport(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading2}
                 >
                     <option value="walking">Walking</option>
                     <option value="cycling">Cycling</option>
@@ -230,26 +230,26 @@ function App(): JSX.Element {
                     <option value="bus">Bus</option>
                 </select>
                 <input
-                    className={`time-input text-sm ${isLoading ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
+                    className={`time-input text-sm ${isLoading2 ? "loading animate__animated animate__pulse animate__infinite" : ""}`}
                     value={timeInput}
                     onChange={e => setTimeInput(e.target.value)}
                     placeholder="e.g. 10m, 1.5h"
-                    disabled={isLoading}
+                    disabled={isLoading2}
                 />
                 <div className="action-buttons">
                     <Button
                         onClick={drawIsochrone}
                         size="default"
-                        disabled={isLoading}
-                        className={`animate__animated ${isLoading ? "loading animate__pulse animate__infinite" : "animate__fadeIn"}`}
+                        disabled={isLoading2}
+                        className={`animate__animated ${isLoading2 ? "loading animate__pulse animate__infinite" : "animate__fadeIn"}`}
                     >
-                        {isLoading ? "Loading..." : "Go"}
+                        {isLoading2 ? "Loading..." : "Go"}
                     </Button>
                     <Button
                         onClick={handleClear}
                         variant="destructive"
                         size="default"
-                        disabled={isLoading}
+                        disabled={isLoading2}
                         className="animate__animated animate__fadeIn"
                     >
                         Clear
@@ -258,7 +258,7 @@ function App(): JSX.Element {
                         onClick={() => setIsHistoryOpen(true)}
                         variant="outline"
                         size="default"
-                        disabled={isLoading}
+                        disabled={isLoading2}
                     >
                         History
                     </Button>
@@ -268,7 +268,7 @@ function App(): JSX.Element {
                         size="icon"
                         className="github-button"
                         title="View Credits"
-                        disabled={isLoading}
+                        disabled={isLoading2}
                     >
                         <svg viewBox="0 0 16 16" fill="currentColor">
                             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12" />
@@ -280,7 +280,7 @@ function App(): JSX.Element {
                         size="icon"
                         className="help-button"
                         title="Help & Examples"
-                        disabled={isLoading}
+                        disabled={isLoading2}
                     >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <circle cx="12" cy="12" r="10" />
@@ -291,7 +291,7 @@ function App(): JSX.Element {
                 </div>
             </div>
             <div
-                className={`map-wrapper ${isLoading ? "loading animate__animated animate__fadeOut animate__faster" : "animate__animated animate__fadeIn"}`}
+                className={`map-wrapper ${isLoading2 ? "loading animate__animated animate__fadeOut animate__faster" : "animate__animated animate__fadeIn"}`}
             >
                 <div ref={mapContainer} className="map" />
                 <PlaceDetails place={selectedPlace} onClose={() => setSelectedPlace(null)} />
