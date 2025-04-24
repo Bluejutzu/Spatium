@@ -1,8 +1,8 @@
 name: Release
 on:
     push:
-        tags:
-            - "v*"
+        branches:
+            - "**"
 
 jobs:
     release:
@@ -57,16 +57,15 @@ jobs:
                   pnpm build
                   pnpm run build:${{ matrix.os == 'windows-latest' && 'win' || matrix.os == 'macos-latest' && 'mac' || 'linux' }}
 
-            # Upload artifacts to release
-            - name: Upload release artifacts
-              uses: softprops/action-gh-release@v1
+            # Upload artifacts as workflow artifacts since we're not creating a release
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v3
               with:
-                  files: |
+                  name: ${{ matrix.os }}-build
+                  path: |
                       dist/*.exe
                       dist/*.deb
                       dist/*.AppImage
                       dist/*.dmg
                       dist/*.zip
                       dist/*.yml
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
