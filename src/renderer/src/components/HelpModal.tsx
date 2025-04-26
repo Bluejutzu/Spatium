@@ -41,6 +41,12 @@ const examples: ExampleItem[] = [
         transport: "driving",
         time: "1h",
         description: "Check driving distances around Paris in 1 hour"
+    },
+    {
+        location: "Nuremberg Castle",
+        transport: "walking",
+        time: "1h",
+        description: "Discover walking distances around Nuremberg Castle in 1 hour"
     }
 ];
 

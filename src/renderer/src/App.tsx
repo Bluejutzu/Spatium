@@ -5,6 +5,7 @@ import type { Circle, Map as LeafletMap } from "leaflet";
 import L from "leaflet";
 import { type JSX, useEffect, useRef, useState } from "react";
 
+import { IsochroneSchema } from "../../../schema/zod";
 import { CreditsModal } from "./components/CreditsModal";
 import { HelpModal } from "./components/HelpModal";
 import { HistoryModal } from "./components/HistoryModal";
@@ -94,24 +95,27 @@ function App(): JSX.Element {
     };
 
     const drawIsochroneWithValues = async (loc: string, mode: string, time: string): Promise<void> => {
-        if (!loc.trim() || !time.trim()) {
-            return showToast("Please provide both location and time values.", "Invalid Input");
-        }
-
-        setIsLoading(true);
-        const m = time.match(/^(\d+(?:\.\d+)?)([hms])$/i);
-        if (!m) return showToast("Time should be in format: 10m, 1.5h, or 30s", "Invalid Time Format");
-
-        const value = parseFloat(m[1]);
-        const unit = m[2].toLowerCase();
-        const seconds = unit === "h" ? value * 3600 : unit === "m" ? value * 60 : value;
-
-        const speed = speeds[mode];
-        if (!speed) return showToast("Selected transport mode is not supported.", "Invalid Transport");
-
-        const radius = speed * seconds;
-
         try {
+            const result = IsochroneSchema.safeParse({
+                location: loc,
+                transport: mode,
+                time: time
+            });
+
+            if (!result.success) {
+                const error = result.error.errors[0];
+                return showToast(error.message, "Validation Error");
+            }
+
+            setIsLoading(true);
+            const m = time.match(/^(\d+(?:\.\d+)?)([hms])$/i);
+            const value = parseFloat(m![1]);
+            const unit = m![2].toLowerCase();
+            const seconds = unit === "h" ? value * 3600 : unit === "m" ? value * 60 : value;
+
+            const speed = speeds[mode];
+            const radius = speed * seconds;
+
             const res = await axios.get(`http://127.0.0.1:3000/geocode`, {
                 params: { q: loc }
             });
@@ -181,6 +185,19 @@ function App(): JSX.Element {
         try {
             if (!location.trim() || !timeInput.trim()) {
                 showToast("Try formats like: '10m' for 10 minutes, '1.5h' for 1.5 hours", "Input Examples");
+                return;
+            }
+
+            // Validate input using schema
+            const result = IsochroneSchema.safeParse({
+                location,
+                transport,
+                time: timeInput
+            });
+
+            if (!result.success) {
+                const error = result.error.errors[0];
+                showToast(error.message, "Validation Error");
                 return;
             }
 
